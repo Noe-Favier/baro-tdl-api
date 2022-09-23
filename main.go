@@ -43,7 +43,11 @@ func main() {
 	var db_port = os.Getenv(env_db_port)
 	var db_name = os.Getenv(env_db_name)
 
-	var bcrypt_cost, _ = strconv.ParseInt(os.Getenv(env_bcrypt_cost), 10, 64)
+	var bcrypt_cost, bcrypt_cost_error = strconv.ParseInt(os.Getenv(env_bcrypt_cost), 10, 64)
+
+	if bcrypt_cost_error != nil {
+		log.Fatalf("Error parsing BCrypt Cost")
+	}
 
 	var ROLE_USER = "USER"
 	//var ROLE_ADMIN = "ADMIN"
