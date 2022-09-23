@@ -3,6 +3,7 @@ package main
 import (
 	"baro-todo-list/forms"
 	"baro-todo-list/models"
+	"strconv"
 
 	"log"
 	"os"
@@ -15,14 +16,18 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"fmt"
 )
 
 const env_db_user = "DB_USER"
 const env_db_pass = "DB_PASS"
 const env_db_name = "DB_NAME"
-const env_db_url  = "DB_URL"
+const env_db_url = "DB_URL"
 const env_db_port = "DB_PORT"
+
+const env_bcrypt_cost = "BCRYPT_COST"
 
 func main() {
 	//get env vars
@@ -34,12 +39,17 @@ func main() {
 
 	var db_user = os.Getenv(env_db_user)
 	var db_pass = os.Getenv(env_db_pass)
-	var db_url  = os.Getenv(env_db_url)
+	var db_url = os.Getenv(env_db_url)
 	var db_port = os.Getenv(env_db_port)
 	var db_name = os.Getenv(env_db_name)
 
+	var bcrypt_cost, _ = strconv.ParseInt(os.Getenv(env_bcrypt_cost), 10, 64)
+
+	var ROLE_USER = "USER"
+	//var ROLE_ADMIN = "ADMIN"
+
 	//connect to database
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", db_user, db_pass, db_url, db_port, db_name)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", db_user, db_pass, db_url, db_port, db_name)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -71,11 +81,27 @@ func main() {
 		var signupForm forms.FormCreateUser
 		ctx.BindJSON(&signupForm)
 
-		var newUser models.User = models.User{Username: signupForm.Username, Email: signupForm.Email, Passwd: signupForm.Password}
-		db.Create(&newUser)
-		ctx.JSON(http.StatusOK, gin.H{
-			"message": "succes",
-		})
+		hashed_password, bcrypt_err := bcrypt.GenerateFromPassword([]byte(signupForm.Password), int(bcrypt_cost))
+
+		if bcrypt_err != nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"message": "BCrypt error",
+			})
+		} else {
+			//password successfully hashed
+			var newUser models.User = models.User{Username: signupForm.Username, Email: signupForm.Email, Passwd: string(hashed_password), Roles: ROLE_USER}
+			result := db.Create(&newUser)
+
+			if result.Error != nil {
+				ctx.JSON(http.StatusOK, gin.H{
+					"message": "error",
+				})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{
+					"message": "succes",
+				})
+			}
+		}
 	})
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
