@@ -18,9 +18,11 @@ import (
 	"fmt"
 )
 
-const db_user = "DB_USER"
-const db_pass = "DB_PASS"
-const db_name = "DB_NAME"
+const env_db_user = "DB_USER"
+const env_db_pass = "DB_PASS"
+const env_db_name = "DB_NAME"
+const env_db_url  = "DB_URL"
+const env_db_port = "DB_PORT"
 
 func main() {
 	//get env vars
@@ -30,12 +32,14 @@ func main() {
 		log.Fatalf("Error loading .env file")
 	}
 
-	var user = os.Getenv(db_user)
-	var pass = os.Getenv(db_pass)
-	var name = os.Getenv(db_name)
+	var db_user = os.Getenv(env_db_user)
+	var db_pass = os.Getenv(env_db_pass)
+	var db_url  = os.Getenv(env_db_url)
+	var db_port = os.Getenv(env_db_port)
+	var db_name = os.Getenv(env_db_name)
 
 	//connect to database
-	dsn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s", user, pass, name)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", db_user, db_pass, db_url, db_port, db_name)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -65,26 +69,13 @@ func main() {
 
 	r.POST("/user", func(ctx *gin.Context) {
 		var signupForm forms.FormCreateUser
-		var error = false
 		ctx.BindJSON(&signupForm)
 
 		var newUser models.User = models.User{Username: signupForm.Username, Email: signupForm.Email, Passwd: signupForm.Password}
-		db.Create(&newUser).Error(); dbc.Error != nil {
-			// Create failed, do something e.g. return, panic etc.
-			ctx.JSON(http.StatusOK, gin.H{
-				"message": "error",
-			})
-			return null
-			//TODO: handle errors 
-		}
-		
-		if(error){
-			
-		}else{
-			ctx.JSON(http.StatusOK, gin.H{
-				"message": "success",
-			})
-		}
+		db.Create(&newUser)
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "succes",
+		})
 	})
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
