@@ -108,5 +108,34 @@ func main() {
 		}
 	})
 
+	r.POST("/login", func(ctx *gin.Context) {
+		var loggedUser models.User
+		var success bool = false
+
+		//Get value from request
+		var loginForm forms.FormLoginUser
+		ctx.BindJSON(&loginForm)
+
+		//Get users
+		users := []models.User{}
+		db.Find(&users)
+
+		//Foreach User : is password valid ?
+		for _, user := range users {
+			if bcrypt.CompareHashAndPassword([]byte(user.Passwd), []byte(loginForm.Password)) != nil && (loginForm.Login == user.Username || loginForm.Login == user.Email) {
+				//if password is ok and the right username|email has been supplied :
+				loggedUser = user
+				success = true
+				break
+			}
+		}
+
+		if success {
+			ctx.JSON(http.StatusOK, loggedUser)
+		} else {
+			ctx.String(http.StatusUnauthorized, "")
+		}
+	})
+
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
