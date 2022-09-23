@@ -85,7 +85,7 @@ func main() {
 
 		if bcrypt_err != nil {
 			ctx.JSON(http.StatusOK, gin.H{
-				"message": "BCrypt error",
+				"message": "error (bcrypt)",
 			})
 		} else {
 			//password successfully hashed
@@ -94,7 +94,7 @@ func main() {
 
 			if result.Error != nil {
 				ctx.JSON(http.StatusOK, gin.H{
-					"message": "error",
+					"message": "error (sql)",
 				})
 			} else {
 				ctx.JSON(http.StatusOK, gin.H{
