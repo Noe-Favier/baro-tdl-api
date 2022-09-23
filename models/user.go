@@ -9,7 +9,7 @@ type User struct {
 	Username string `json:"username" gorm:"unique_index"`
 	Email    string `json:"email"`
 	Passwd   string `json:"passwd"`
-	Roles    string `json:"roles"`
+	Roles    string `json:"roles" sql:"DEFAULT:'USER'"`
 
 	//relations
 	Categories []Category `gorm:"many2many:user_category;"`

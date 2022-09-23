@@ -1,7 +1,9 @@
 package main
 
 import (
+	"baro-todo-list/forms"
 	"baro-todo-list/models"
+
 	"log"
 	"os"
 
@@ -42,12 +44,9 @@ func main() {
 
 	db.Logger.LogMode(logger.Error)
 
-	db.Debug().AutoMigrate(models.User{})
-	fmt.Print("\n----------------------------------------\n")
-	db.Debug().AutoMigrate(models.Category{})
-	fmt.Print("\n----------------------------------------\n")
-	db.Debug().AutoMigrate(models.Element{})
-	fmt.Print("\n----------------------------------------\n")
+	db.AutoMigrate(models.User{})
+	db.AutoMigrate(models.Category{})
+	db.AutoMigrate(models.Element{})
 
 	//routing
 	r := gin.Default()
@@ -62,6 +61,30 @@ func main() {
 		users := []models.User{}
 		db.Find(&users)
 		c.JSON(http.StatusOK, &users)
+	})
+
+	r.POST("/user", func(ctx *gin.Context) {
+		var signupForm forms.FormCreateUser
+		var error = false
+		ctx.BindJSON(&signupForm)
+
+		var newUser models.User = models.User{Username: signupForm.Username, Email: signupForm.Email, Passwd: signupForm.Password}
+		db.Create(&newUser).Error(); dbc.Error != nil {
+			// Create failed, do something e.g. return, panic etc.
+			ctx.JSON(http.StatusOK, gin.H{
+				"message": "error",
+			})
+			return null
+			//TODO: handle errors 
+		}
+		
+		if(error){
+			
+		}else{
+			ctx.JSON(http.StatusOK, gin.H{
+				"message": "success",
+			})
+		}
 	})
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
