@@ -48,9 +48,6 @@ func main() {
 	fmt.Print("\n----------------------------------------\n")
 	db.Debug().AutoMigrate(models.Element{})
 	fmt.Print("\n----------------------------------------\n")
-	db.Debug().AutoMigrate(models.CategoryElement{})
-	fmt.Print("\n----------------------------------------\n")
-	db.Debug().AutoMigrate(models.CategoryUser{})
 
 	//routing
 	r := gin.Default()
