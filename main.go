@@ -4,6 +4,7 @@ import (
 	"baro-todo-list/forms"
 	"baro-todo-list/models"
 	"strconv"
+	"time"
 
 	"log"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -29,6 +31,8 @@ const env_db_port = "DB_PORT"
 
 const env_bcrypt_cost = "BCRYPT_COST"
 
+const env_app_secret = "APP_SECRET"
+
 func main() {
 	//get env vars
 	err := godotenv.Load(".env")
@@ -44,6 +48,8 @@ func main() {
 	var db_name = os.Getenv(env_db_name)
 
 	var bcrypt_cost, bcrypt_cost_error = strconv.ParseInt(os.Getenv(env_bcrypt_cost), 10, 64)
+
+	var app_secret = os.Getenv(env_app_secret)
 
 	if bcrypt_cost_error != nil {
 		log.Fatalf("Error parsing BCrypt Cost")
@@ -109,6 +115,24 @@ func main() {
 	})
 
 	r.POST("/login", func(ctx *gin.Context) {
+		/* TOKEN GENERATOR */
+		var createToken = func(userid uint) (string, error) {
+			var err error
+			//Creating Access Token
+			os.Setenv("ACCESS_SECRET", "jdnfksdmfksd") //this should be in an env file
+			atClaims := jwt.MapClaims{}
+			atClaims["authorized"] = true
+			atClaims["user_id"] = userid
+			atClaims["exp"] = time.Now().Add(time.Hour * 48).Unix() //token lasts for 48 hours TODO: add this to .env
+			at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+			token, err := at.SignedString([]byte(app_secret))
+			if err != nil {
+				return "", err
+			}
+			return token, nil
+		}
+		/* /// */
+
 		var loggedUser models.User
 		var success bool = false
 
@@ -136,11 +160,12 @@ func main() {
 			return
 		}
 
-		if success {
-			ctx.JSON(http.StatusOK, loggedUser)
-		} else {
-			ctx.String(http.StatusUnauthorized, "")
+		token, err := createToken(loggedUser.ID)
+		if err != nil {
+			ctx.JSON(http.StatusUnprocessableEntity, err.Error())
+			return
 		}
+		ctx.JSON(http.StatusOK, token)
 	})
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
