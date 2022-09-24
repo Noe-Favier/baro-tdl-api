@@ -88,7 +88,7 @@ func main() {
 		hashed_password, bcrypt_err := bcrypt.GenerateFromPassword([]byte(signupForm.Password), int(bcrypt_cost))
 
 		if bcrypt_err != nil {
-			ctx.JSON(http.StatusOK, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"message": "error (bcrypt)",
 			})
 		} else {
@@ -97,7 +97,7 @@ func main() {
 			result := db.Create(&newUser)
 
 			if result.Error != nil {
-				ctx.JSON(http.StatusOK, gin.H{
+				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 					"message": "error (sql)",
 				})
 			} else {
@@ -122,12 +122,18 @@ func main() {
 
 		//Foreach User : is password valid ?
 		for _, user := range users {
-			if bcrypt.CompareHashAndPassword([]byte(user.Passwd), []byte(loginForm.Password)) != nil && (loginForm.Login == user.Username || loginForm.Login == user.Email) {
+			if bcrypt.CompareHashAndPassword([]byte(user.Passwd), []byte(loginForm.Password)) == nil && (loginForm.Login == user.Username || loginForm.Login == user.Email) {
 				//if password is ok and the right username|email has been supplied :
 				loggedUser = user
 				success = true
 				break
 			}
+		}
+		if !success {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"message": "error (logins invalid)",
+			})
+			return
 		}
 
 		if success {
