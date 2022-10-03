@@ -13,7 +13,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	cors "github.com/itsjamie/gin-cors"
 	"github.com/joho/godotenv"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -74,6 +76,16 @@ func main() {
 
 	//routing
 	r := gin.Default()
+
+	r.Use(cors.Middleware(cors.Config{
+		Origins:         "*",
+		Methods:         "GET, PUT, POST, DELETE",
+		RequestHeaders:  "Origin, Authorization, Content-Type",
+		ExposedHeaders:  "",
+		MaxAge:          50 * time.Second,
+		Credentials:     false,
+		ValidateHeaders: false,
+	}))
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -146,8 +158,11 @@ func main() {
 
 		//Foreach User : is password valid ?
 		for _, user := range users {
+			println("user check : " + loginForm.Login + ">>" + user.Username + "||" + user.Email)
+			println("pwd check" + loginForm.Password + "][" + user.Passwd + ">>")
 			if bcrypt.CompareHashAndPassword([]byte(user.Passwd), []byte(loginForm.Password)) == nil && (loginForm.Login == user.Username || loginForm.Login == user.Email) {
 				//if password is ok and the right username|email has been supplied :
+				println("OK !")
 				loggedUser = user
 				success = true
 				break
