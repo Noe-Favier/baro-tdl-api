@@ -189,8 +189,8 @@ func main() {
 		var categoryForm forms.FormCreateCategory
 		ctx.BindJSON(&categoryForm)
 		//
-		var creator models.User = models.User{Username: categoryForm.CreatedByUsername}
-		db.First(&creator)
+		var creator models.User
+		db.First(&creator, "username = ?", categoryForm.CreatedByUsername)
 		//
 		var code string = uuid.New().String()
 		var newCategory models.Category = models.Category{Label: categoryForm.Label, CreatedByUsername: categoryForm.CreatedByUsername, Users: []models.User{creator}, Code: code}
@@ -220,18 +220,63 @@ func main() {
 		db.Preload("Users").Find(&category) //PreLoad Relations
 		db.Where("username IN ?", categoryLinkForm.Usernames).Find(&newUsers)
 
-		var creator []models.User = []models.User{{Username: category.CreatedByUsername}}
-		db.First(&creator)
+		var creator []models.User
+		db.First(&creator, "username = ?", category.CreatedByUsername)
 
 		var finalUsers []models.User = append(creator, newUsers...)
 
 		result := db.Debug().Model(&category).Association("Users").Replace(&finalUsers)
-		//result := db.Model(&category.Users).Updates(finalUsers)
 
 		if result != nil {
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 				"message":  "error (sql)",
 				"errorMsg": result.Error(),
+			})
+		} else {
+			ctx.JSON(http.StatusOK, gin.H{
+				"message": "succes",
+			})
+		}
+	})
+
+	r.POST("/element", func(ctx *gin.Context) {
+		var elementForm forms.FormCreateElement
+		ctx.BindJSON(&elementForm)
+		//
+		var category models.Category
+		db.First(&category, "code = ?", elementForm.CategoryCode)
+		//
+		var code string = uuid.New().String()
+		var newElement models.Element = models.Element{Label: elementForm.Label, CreatedByUsername: elementForm.CreatedByUsername, Code: code, CategoryID: category.ID, Checked: false}
+		result := db.Create(&newElement)
+
+		if result.Error != nil {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+				"message":  "error (sql)",
+				"errorMsg": result.Error.Error(),
+			})
+		} else {
+			ctx.JSON(http.StatusOK, gin.H{
+				"message": "succes",
+			})
+		}
+	})
+
+	r.POST("/element/check", func(ctx *gin.Context) {
+		var elementForm forms.FormCheckElement
+		ctx.BindJSON(&elementForm)
+		//
+		var element models.Element
+		db.First(&element, "code = ?", elementForm.Code)
+		println(element.Code + " // " + strconv.FormatUint(uint64(element.ID), 10))
+		//
+		//db.Debug().Model(&element).Updates(models.Element{Checked: element.Checked})
+		result := db.Debug().Model(&element).Update("checked", elementForm.Checked)
+
+		if result.Error != nil {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+				"message":  "error (sql)",
+				"errorMsg": result.Error.Error(),
 			})
 		} else {
 			ctx.JSON(http.StatusOK, gin.H{

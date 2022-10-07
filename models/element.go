@@ -8,6 +8,9 @@ type Element struct {
 	ID      uint   `json:"id" gorm:"primary_key"`
 	Label   string `json:"label"`
 	Checked bool   `json:"checked"`
+	Code    string `json:"code" gorm:"unique;not null"`
+
+	CreatedByUsername string `json:"created_by_username"`
 
 	//relations
 	CategoryID uint
