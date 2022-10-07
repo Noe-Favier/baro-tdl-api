@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	cors "github.com/itsjamie/gin-cors"
 	"github.com/joho/godotenv"
 
@@ -116,7 +117,8 @@ func main() {
 
 			if result.Error != nil {
 				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
-					"message": "error (sql)",
+					"message":  "error (sql)",
+					"errorMsg": result.Error.Error(),
 				})
 			} else {
 				ctx.JSON(http.StatusOK, gin.H{
@@ -181,6 +183,61 @@ func main() {
 			return
 		}
 		ctx.JSON(http.StatusOK, token)
+	})
+
+	r.POST("/category", func(ctx *gin.Context) {
+		var categoryForm forms.FormCreateCategory
+		ctx.BindJSON(&categoryForm)
+		//
+		var creator models.User = models.User{Username: categoryForm.CreatedByUsername}
+		db.First(&creator)
+		//
+		var code string = uuid.New().String()
+		var newCategory models.Category = models.Category{Label: categoryForm.Label, CreatedByUsername: categoryForm.CreatedByUsername, Users: []models.User{creator}, Code: code}
+		result := db.Create(&newCategory)
+
+		if result.Error != nil {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+				"message":  "error (sql)",
+				"errorMsg": result.Error.Error(),
+			})
+		} else {
+			ctx.JSON(http.StatusOK, gin.H{
+				"message": "succes",
+			})
+		}
+	})
+
+	/** REPLACE USERS BY INPUTED USERS */
+	r.POST("/category/link/user", func(ctx *gin.Context) {
+		var categoryLinkForm forms.FormLinkCategoryToUser
+		ctx.BindJSON(&categoryLinkForm)
+		//
+		var category models.Category = models.Category{Code: categoryLinkForm.CategoryCode}
+		db.First(&category)
+		//
+		newUsers := []models.User{}
+		db.Preload("Users").Find(&category) //PreLoad Relations
+		db.Where("username IN ?", categoryLinkForm.Usernames).Find(&newUsers)
+
+		var creator []models.User = []models.User{{Username: category.CreatedByUsername}}
+		db.First(&creator)
+
+		var finalUsers []models.User = append(creator, newUsers...)
+
+		result := db.Debug().Model(&category).Association("Users").Replace(&finalUsers)
+		//result := db.Model(&category.Users).Updates(finalUsers)
+
+		if result != nil {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+				"message":  "error (sql)",
+				"errorMsg": result.Error(),
+			})
+		} else {
+			ctx.JSON(http.StatusOK, gin.H{
+				"message": "succes",
+			})
+		}
 	})
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")

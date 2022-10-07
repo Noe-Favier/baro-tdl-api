@@ -7,6 +7,9 @@ type Category struct {
 
 	ID    uint   `json:"id" gorm:"primary_key"`
 	Label string `json:"label"`
+	Code  string `json:"code" gorm:"unique;not null"`
+
+	CreatedByUsername string `json:"created_by_username"`
 
 	//relations
 	Elements []Element
