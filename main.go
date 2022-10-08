@@ -130,13 +130,13 @@ func main() {
 
 	r.POST("/login", func(ctx *gin.Context) {
 		/* TOKEN GENERATOR */
-		var createToken = func(userid uint) (string, error) {
+		var createToken = func(user models.User) (string, error) {
 			var err error
 			//Creating Access Token
 			os.Setenv("ACCESS_SECRET", "jdnfksdmfksd") //this should be in an env file
 			atClaims := jwt.MapClaims{}
 			atClaims["authorized"] = true
-			atClaims["user_id"] = userid
+			atClaims["user"] = user
 			atClaims["exp"] = time.Now().Add(time.Hour * 48).Unix() //token lasts for 48 hours TODO: add this to .env
 			at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 			token, err := at.SignedString([]byte(app_secret))
@@ -177,7 +177,7 @@ func main() {
 			return
 		}
 
-		token, err := createToken(loggedUser.ID)
+		token, err := createToken(loggedUser)
 		if err != nil {
 			ctx.JSON(http.StatusUnprocessableEntity, err.Error())
 			return
