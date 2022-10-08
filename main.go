@@ -324,7 +324,7 @@ func main() {
 		var user models.User
 		//
 		db.First(&user, "username = ?", username)
-		result := db.Preload("Categories").Find(&user)
+		result := db.Preload("Categories.Elements").Preload("Categories.Users").Find(&user)
 
 		if result.Error != nil {
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
