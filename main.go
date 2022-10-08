@@ -220,8 +220,8 @@ func main() {
 		var categoryLinkForm forms.FormLinkCategoryToUser
 		ctx.BindJSON(&categoryLinkForm)
 		//
-		var category models.Category = models.Category{Code: categoryLinkForm.CategoryCode}
-		db.First(&category)
+		var category models.Category
+		db.First(&category, "code = ?", categoryLinkForm.CategoryCode)
 		//
 		newUsers := []models.User{}
 		db.Preload("Users").Find(&category) //PreLoad Relations
@@ -249,6 +249,16 @@ func main() {
 	r.POST("/element", func(ctx *gin.Context) {
 		var elementForm forms.FormCreateElement
 		ctx.BindJSON(&elementForm)
+		//
+		var creator models.User
+		db.First(&creator, "username = ?", elementForm.CreatedByUsername)
+		if len(creator.Passwd) <= 0 {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+				"message":  "error (request)",
+				"errorMsg": "Username unknown",
+			})
+			return
+		}
 		//
 		var category models.Category
 		db.First(&category, "code = ?", elementForm.CategoryCode)
