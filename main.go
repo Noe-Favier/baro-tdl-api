@@ -122,7 +122,7 @@ func main() {
 				})
 			} else {
 				ctx.JSON(http.StatusOK, gin.H{
-					"message": "succes",
+					"message": "success",
 				})
 			}
 		}
@@ -148,7 +148,7 @@ func main() {
 		/* /// */
 
 		var loggedUser models.User
-		var success bool = false
+		var successs bool = false
 
 		//Get value from request
 		var loginForm forms.FormLoginUser
@@ -166,11 +166,11 @@ func main() {
 				//if password is ok and the right username|email has been supplied :
 				println("OK !")
 				loggedUser = user
-				success = true
+				successs = true
 				break
 			}
 		}
-		if !success {
+		if !successs {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"message": "error (logins invalid)",
 			})
@@ -210,7 +210,7 @@ func main() {
 			})
 		} else {
 			ctx.JSON(http.StatusOK, gin.H{
-				"message": "succes",
+				"message": "success",
 			})
 		}
 	})
@@ -241,7 +241,7 @@ func main() {
 			})
 		} else {
 			ctx.JSON(http.StatusOK, gin.H{
-				"message": "succes",
+				"message": "success",
 			})
 		}
 	})
@@ -274,7 +274,7 @@ func main() {
 			})
 		} else {
 			ctx.JSON(http.StatusOK, gin.H{
-				"message": "succes",
+				"message": "success",
 			})
 		}
 	})
@@ -297,7 +297,7 @@ func main() {
 			})
 		} else {
 			ctx.JSON(http.StatusOK, gin.H{
-				"message": "succes",
+				"message": "success",
 			})
 		}
 	})
