@@ -191,6 +191,13 @@ func main() {
 		//
 		var creator models.User
 		db.First(&creator, "username = ?", categoryForm.CreatedByUsername)
+		if len(creator.Passwd) <= 0 {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+				"message":  "error (request)",
+				"errorMsg": "Username unknown",
+			})
+			return
+		}
 		//
 		var code string = uuid.New().String()
 		var newCategory models.Category = models.Category{Label: categoryForm.Label, CreatedByUsername: categoryForm.CreatedByUsername, Users: []models.User{creator}, Code: code}
