@@ -10,7 +10,7 @@ type Element struct {
 	Checked bool   `json:"checked"`
 	Code    string `json:"code" gorm:"unique;not null"`
 
-	CreatedByUsername string `json:"created_by_username"`
+	CreatedByUsername string `json:"creator"`
 
 	//relations
 	CategoryID uint

@@ -2,6 +2,6 @@ package forms
 
 type FormCreateElement struct {
 	Label             string `json:"label"`
-	CreatedByUsername string `json:"created_by_username"`
+	CreatedByUsername string `json:"creator"`
 	CategoryCode      string `json:"code"`
 }
