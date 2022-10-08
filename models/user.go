@@ -11,8 +11,8 @@ type User struct {
 	Email    string `json:"email" gorm:"unique;not null"`
 
 	Passwd string `json:"-"`
-	Roles  string `json:"roles" sql:"DEFAULT:'USER'"`
+	Role   string `json:"role" sql:"DEFAULT:'USER'"`
 
 	//relations
-	Categories []Category `gorm:"many2many:user_category;"`
+	Categories []Category `json:"users" gorm:"many2many:user_category;"`
 }

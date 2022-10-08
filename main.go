@@ -112,7 +112,7 @@ func main() {
 			})
 		} else {
 			//password successfully hashed
-			var newUser models.User = models.User{Username: signupForm.Username, Email: signupForm.Email, Passwd: string(hashed_password), Roles: ROLE_USER}
+			var newUser models.User = models.User{Username: signupForm.Username, Email: signupForm.Email, Passwd: string(hashed_password), Role: ROLE_USER}
 			result := db.Create(&newUser)
 
 			if result.Error != nil {

@@ -12,6 +12,6 @@ type Category struct {
 	CreatedByUsername string `json:"creator"`
 
 	//relations
-	Elements []Element
-	Users    []User `gorm:"many2many:user_category;"`
+	Elements []Element `json:"elements"`
+	Users    []User    `json:"users" gorm:"many2many:user_category;"`
 }

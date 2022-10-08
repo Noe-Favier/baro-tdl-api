@@ -13,5 +13,5 @@ type Element struct {
 	CreatedByUsername string `json:"creator"`
 
 	//relations
-	CategoryID uint
+	CategoryID uint `json:"category"`
 }
