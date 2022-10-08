@@ -336,5 +336,22 @@ func main() {
 		}
 	})
 
+	r.GET("category/by/:code", func(ctx *gin.Context) {
+		var code string = ctx.Param("code")
+		var category models.Category
+		//
+		db.First(&category, "code = ?", code)
+		result := db.Preload("Users").Preload("Elements").Find(&category)
+
+		if result.Error != nil {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+				"message":  "error (sql)",
+				"errorMsg": result.Error.Error(),
+			})
+		} else {
+			ctx.JSON(http.StatusOK, &category)
+		}
+	})
+
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
