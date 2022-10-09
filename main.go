@@ -160,11 +160,8 @@ func main() {
 
 		//Foreach User : is password valid ?
 		for _, user := range users {
-			println("user check : " + loginForm.Login + ">>" + user.Username + "||" + user.Email)
-			println("pwd check" + loginForm.Password + "][" + user.Passwd + ">>")
 			if bcrypt.CompareHashAndPassword([]byte(user.Passwd), []byte(loginForm.Password)) == nil && (loginForm.Login == user.Username || loginForm.Login == user.Email) {
 				//if password is ok and the right username|email has been supplied :
-				println("OK !")
 				loggedUser = user
 				successs = true
 				break
@@ -172,7 +169,8 @@ func main() {
 		}
 		if !successs {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"message": "error (logins invalid)",
+				"message":  "error (logins)",
+				"errorMsg": "Those logins are invalid",
 			})
 			return
 		}
@@ -182,7 +180,10 @@ func main() {
 			ctx.JSON(http.StatusUnprocessableEntity, err.Error())
 			return
 		}
-		ctx.JSON(http.StatusOK, token)
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "success",
+			"token":   token,
+		})
 	})
 
 	r.POST("/category", func(ctx *gin.Context) {
@@ -232,7 +233,7 @@ func main() {
 
 		var finalUsers []models.User = append(creator, newUsers...)
 
-		result := db.Debug().Model(&category).Association("Users").Replace(&finalUsers)
+		result := db.Model(&category).Association("Users").Replace(&finalUsers)
 
 		if result != nil {
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
@@ -287,8 +288,7 @@ func main() {
 		db.First(&element, "code = ?", elementForm.Code)
 		println(element.Code + " // " + strconv.FormatUint(uint64(element.ID), 10))
 		//
-		//db.Debug().Model(&element).Updates(models.Element{Checked: element.Checked})
-		result := db.Debug().Model(&element).Update("checked", elementForm.Checked)
+		result := db.Model(&element).Update("checked", elementForm.Checked)
 
 		if result.Error != nil {
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
