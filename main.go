@@ -123,30 +123,13 @@ func main() {
 			} else {
 				ctx.JSON(http.StatusOK, gin.H{
 					"message": "success",
+					"token": createToken(newUser, app_secret)
 				})
 			}
 		}
 	})
 
 	r.POST("/login", func(ctx *gin.Context) {
-		/* TOKEN GENERATOR */
-		var createToken = func(user models.User) (string, error) {
-			var err error
-			//Creating Access Token
-			os.Setenv("ACCESS_SECRET", "jdnfksdmfksd") //this should be in an env file
-			atClaims := jwt.MapClaims{}
-			atClaims["authorized"] = true
-			atClaims["user"] = user
-			atClaims["exp"] = time.Now().Add(time.Hour * 48).Unix() //token lasts for 48 hours TODO: add this to .env
-			at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
-			token, err := at.SignedString([]byte(app_secret))
-			if err != nil {
-				return "", err
-			}
-			return token, nil
-		}
-		/* /// */
-
 		var loggedUser models.User
 		var successs bool = false
 
@@ -160,11 +143,18 @@ func main() {
 
 		//Foreach User : is password valid ?
 		for _, user := range users {
+			fmt.Println("'-------------------'")
+			fmt.Println(user.Username)
 			if bcrypt.CompareHashAndPassword([]byte(user.Passwd), []byte(loginForm.Password)) == nil && (loginForm.Login == user.Username || loginForm.Login == user.Email) {
+				fmt.Println("OK !")
 				//if password is ok and the right username|email has been supplied :
 				loggedUser = user
 				successs = true
 				break
+			} else {
+				fmt.Println(user.Passwd)
+				fmt.Println(user.Email)
+				fmt.Println(bcrypt.CompareHashAndPassword([]byte(user.Passwd), []byte(loginForm.Password)) == nil && (loginForm.Login == user.Username || loginForm.Login == user.Email))
 			}
 		}
 		if !successs {
@@ -175,7 +165,7 @@ func main() {
 			return
 		}
 
-		token, err := createToken(loggedUser)
+		token, err := createToken(loggedUser, app_secret)
 		if err != nil {
 			ctx.JSON(http.StatusUnprocessableEntity, err.Error())
 			return
@@ -355,3 +345,22 @@ func main() {
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
+
+/* TOKEN GENERATOR */
+var createToken = func(user models.User, app_secret string) (string, error) {
+	var err error
+	//Creating Access Token
+	os.Setenv("ACCESS_SECRET", "jdnfksdmfksd") //this should be in an env file
+	atClaims := jwt.MapClaims{}
+	atClaims["authorized"] = true
+	atClaims["user"] = user
+	atClaims["exp"] = time.Now().Add(time.Hour * 48).Unix() //token lasts for 48 hours TODO: add this to .env
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+	token, err := at.SignedString([]byte(app_secret))
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+/* /// */
