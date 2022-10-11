@@ -115,6 +115,12 @@ func main() {
 			var newUser models.User = models.User{Username: signupForm.Username, Email: signupForm.Email, Passwd: string(hashed_password), Role: ROLE_USER}
 			result := db.Create(&newUser)
 
+			token, err := createToken(newUser, app_secret)
+
+			if err != nil {
+				token = ""
+			}
+
 			if result.Error != nil {
 				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 					"message":  "error (sql)",
@@ -123,7 +129,7 @@ func main() {
 			} else {
 				ctx.JSON(http.StatusOK, gin.H{
 					"message": "success",
-					"token": createToken(newUser, app_secret)
+					"token":   token,
 				})
 			}
 		}
@@ -143,18 +149,11 @@ func main() {
 
 		//Foreach User : is password valid ?
 		for _, user := range users {
-			fmt.Println("'-------------------'")
-			fmt.Println(user.Username)
 			if bcrypt.CompareHashAndPassword([]byte(user.Passwd), []byte(loginForm.Password)) == nil && (loginForm.Login == user.Username || loginForm.Login == user.Email) {
-				fmt.Println("OK !")
 				//if password is ok and the right username|email has been supplied :
 				loggedUser = user
 				successs = true
 				break
-			} else {
-				fmt.Println(user.Passwd)
-				fmt.Println(user.Email)
-				fmt.Println(bcrypt.CompareHashAndPassword([]byte(user.Passwd), []byte(loginForm.Password)) == nil && (loginForm.Login == user.Username || loginForm.Login == user.Email))
 			}
 		}
 		if !successs {
@@ -276,7 +275,6 @@ func main() {
 		//
 		var element models.Element
 		db.First(&element, "code = ?", elementForm.Code)
-		println(element.Code + " // " + strconv.FormatUint(uint64(element.ID), 10))
 		//
 		result := db.Model(&element).Update("checked", elementForm.Checked)
 
