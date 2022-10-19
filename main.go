@@ -55,6 +55,7 @@ func main() {
 	var app_secret = os.Getenv(env_app_secret)
 
 	if bcrypt_cost_error != nil {
+		fmt.Println(bcrypt_cost_error.Error())
 		log.Fatalf("Error parsing BCrypt Cost")
 	}
 
@@ -66,6 +67,7 @@ func main() {
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
+		fmt.Println(err.Error())
 		panic("Failed to connect database")
 	}
 
