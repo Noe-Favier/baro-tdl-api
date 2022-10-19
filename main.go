@@ -38,7 +38,7 @@ const env_app_secret = "APP_SECRET"
 
 func main() {
 	//get env vars
-	err := godotenv.Load(".env")
+	err := godotenv.Overload()
 
 	if err != nil {
 		log.Fatalf("Error loading .env file")
